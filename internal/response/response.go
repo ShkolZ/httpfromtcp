@@ -13,6 +13,7 @@ const (
 	OK                  StatusCode = 200
 	BadRequest          StatusCode = 400
 	InternalServerError StatusCode = 500
+	NotFound            StatusCode = 404
 )
 
 func WriteStatusLine(w io.Writer, sc StatusCode) error {
@@ -24,11 +25,16 @@ func WriteStatusLine(w io.Writer, sc StatusCode) error {
 		sLine = "HTTP/1.1 400 Bad Request"
 	case InternalServerError:
 		sLine = "HTTP/1.1 500 Internal Server Error"
+	case NotFound:
+		sLine = "HTTP/1.1 404 Not Found"
+	default:
+		sLine = "HTTP/1.1 403 Idk"
 	}
 	_, err := w.Write([]byte(fmt.Sprintf("%s\r\n", sLine)))
 	if err != nil {
 		return err
 	}
+	fmt.Println(sLine)
 	return nil
 }
 
@@ -50,4 +56,11 @@ func WriteHeaders(w io.Writer, h headers.Headers) error {
 	}
 	w.Write([]byte("\r\n"))
 	return nil
+}
+
+func WriteBody(w io.Writer, data []byte) {
+	headers := GetDefaultHeaders(len(data))
+	WriteStatusLine(w, 200)
+	WriteHeaders(w, headers)
+	w.Write(data)
 }

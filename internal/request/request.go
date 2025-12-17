@@ -84,7 +84,6 @@ outer:
 
 				read += n
 				r.headerDone = done
-				fmt.Printf("tyt %v, %v\n", r.headerDone, done)
 			}
 
 			val, ok := r.Headers.Get("content-length")
@@ -103,7 +102,6 @@ outer:
 			} else {
 				bodyDone = true
 			}
-			fmt.Printf("zalupa: %v, %v", r.headerDone, bodyDone)
 			if r.headerDone && bodyDone {
 				r.finish()
 			}

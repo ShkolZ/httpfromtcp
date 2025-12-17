@@ -1,7 +1,6 @@
 package server
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"log"
@@ -16,7 +15,7 @@ type Server struct {
 	port      int
 	isServing bool
 	listener  net.Listener
-	handler   Handler
+	mux       *Mux
 }
 
 type HandlerError struct {
@@ -24,7 +23,7 @@ type HandlerError struct {
 	Msg        string
 }
 
-type Handler func(w io.Writer, req *request.Request) *HandlerError
+type Handler func(w io.Writer, req *request.Request)
 
 func (s *Server) handle(conn net.Conn) {
 	defer conn.Close()
@@ -33,21 +32,9 @@ func (s *Server) handle(conn net.Conn) {
 	if err != nil {
 		log.Fatalln()
 	}
-	buf := &bytes.Buffer{}
 
-	hErr := s.handler(buf, req)
-	if hErr != nil {
-		h := response.GetDefaultHeaders(len(hErr.Msg))
-		response.WriteStatusLine(conn, 400)
-		response.WriteHeaders(conn, h)
+	s.mux.Handle(conn, req)
 
-		return
-	}
-
-	headers := response.GetDefaultHeaders(int(buf.Len()))
-	response.WriteStatusLine(conn, 200)
-	response.WriteHeaders(conn, headers)
-	conn.Write(buf.Bytes())
 }
 
 func (s *Server) listen() {
@@ -64,7 +51,7 @@ func (s *Server) Close() error {
 	return nil
 }
 
-func Serve(port int, handler Handler) (*Server, error) {
+func Serve(port int, m *Mux) (*Server, error) {
 	ln, err := net.Listen("tcp", ":"+strconv.Itoa(port))
 	if err != nil {
 		return nil, err
@@ -74,7 +61,7 @@ func Serve(port int, handler Handler) (*Server, error) {
 		port:      port,
 		isServing: true,
 		listener:  ln,
-		handler:   handler,
+		mux:       m,
 	}
 
 	go ser.listen()
