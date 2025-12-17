@@ -14,7 +14,7 @@ import (
 const port = 42069
 
 func main() {
-	server, err := server.Serve(port, handler)
+	server, err := server.Serve(port, basicHandler)
 	if err != nil {
 		log.Fatalf("Error starting server: %v", err)
 	}
@@ -27,7 +27,7 @@ func main() {
 	log.Println("Server gracefully stopped")
 }
 
-func handler(w io.Writer, req *request.Request) *server.HandlerError {
+func basicHandler(w io.Writer, req *request.Request) *server.HandlerError {
 	if req.RequestLine.RequestTarget == "/yourproblem" {
 		return &server.HandlerError{
 			StatusCode: 400,
